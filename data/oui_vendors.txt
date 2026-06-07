@@ -1,0 +1,12 @@
+000C29 VMware
+00505A Cisco
+001A2B Ayecom
+001B63 Apple
+002500 Apple
+3C5AB4 Google
+B827EB Raspberry Pi Foundation
+DC4F22 Espressif
+A4CF12 Espressif
+FCF5C4 Espressif
+7C9EBD Intel
+48E244 Samsung
