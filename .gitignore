@@ -16,3 +16,5 @@ build/
 .claude/
 *.pcap
 reports_output/
+/password_strength.png
+/handshake_flow.png

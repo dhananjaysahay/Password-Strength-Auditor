@@ -166,7 +166,11 @@ def cmd_handshake(filepath: str):
         border_style="blue"))
 
     reader = PcapReader()
-    packets, meta = reader.read(filepath)
+    try:
+        packets, meta = reader.read(filepath)
+    except (FileNotFoundError, ValueError, ImportError) as e:
+        console.print(f"[red]Error: {e}[/red]")
+        return
 
     console.print(f"\n[bold]Capture Metadata[/bold]")
     console.print(f"  Total packets: {meta.total_packets}")

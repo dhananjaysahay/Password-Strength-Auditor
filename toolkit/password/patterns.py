@@ -15,7 +15,7 @@ class PatternMatch:
 class PatternDetector:
     KEYBOARD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm", "1234567890"]
     LEET_MAP = {"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "@": "a", "$": "s"}
-    DATE_PATTERNS = [r"\b(19|20)\d{2}\b", r"\b\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4}\b"]
+    DATE_PATTERNS = [r"(19|20)\d{2}", r"\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4}"]
 
     def __init__(self, common_words: list[str] | None = None):
         self.common_words = set(w.lower() for w in (common_words or []))
