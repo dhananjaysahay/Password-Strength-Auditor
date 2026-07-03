@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecAudit — Security Auditing Toolkit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { primary: '#0d1117', secondary: '#161b22', tertiary: '#21262d' },
+            accent: { green: '#3fb950', red: '#f85149', yellow: '#d29922', blue: '#58a6ff', purple: '#bc8cff' },
+            text: { primary: '#e6edf3', secondary: '#8b949e', muted: '#484f58' },
+            border: { default: '#30363d', highlight: '#58a6ff' },
+          },
+          fontFamily: { mono: ['JetBrains Mono', 'monospace'], sans: ['Inter', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0d1117; color: #e6edf3; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .tab-active { border-bottom: 2px solid #58a6ff; color: #58a6ff; }
+    .tab-inactive { border-bottom: 2px solid transparent; color: #8b949e; }
+    .tab-inactive:hover { color: #e6edf3; }
+    .score-ring { transition: stroke-dashoffset 0.8s ease-out; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .pulse { animation: pulse 2s infinite; }
+    .password-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #161b22; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+    .risk-high { border-left: 3px solid #f85149; }
+    .risk-medium { border-left: 3px solid #d29922; }
+    .risk-low { border-left: 3px solid #3fb950; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-border-default bg-bg-secondary">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-accent-blue/20 flex items-center justify-center">
+          <svg class="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h1 class="text-lg font-semibold">SecAudit</h1>
+        <span class="text-xs text-text-muted mono bg-bg-tertiary px-2 py-0.5 rounded">v1.0.0</span>
+      </div>
+      <a href="https://github.com" target="_blank" class="text-text-secondary hover:text-text-primary text-sm flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        Source
+      </a>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="border-b border-border-default bg-bg-secondary">
+    <div class="max-w-6xl mx-auto px-6 flex gap-6">
+      <button onclick="switchTab('password')" id="tab-password" class="tab-active py-3 px-1 text-sm font-medium transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+        Password Auditor
+      </button>
+      <button onclick="switchTab('network')" id="tab-network" class="tab-inactive py-3 px-1 text-sm font-medium transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Network Scanner
+      </button>
+      <button onclick="switchTab('handshake')" id="tab-handshake" class="tab-inactive py-3 px-1 text-sm font-medium transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Handshake Analyzer
+      </button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- PASSWORD TAB -->
+    <section id="panel-password">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Input column -->
+        <div class="lg:col-span-1">
+          <div class="bg-bg-secondary border border-border-default rounded-lg p-6">
+            <label class="block text-sm font-medium mb-3">Enter a password to audit</label>
+            <div class="relative">
+              <input id="pw-input" type="text" placeholder="Type a password..."
+                class="password-input mono w-full bg-bg-primary border border-border-default rounded-md px-4 py-3 text-text-primary placeholder-text-muted focus:border-accent-blue transition-colors"
+                autocomplete="off" spellcheck="false" />
+              <button onclick="toggleVisibility()" id="pw-toggle" class="absolute right-3 top-3.5 text-text-muted hover:text-text-secondary">
+                <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+              </button>
+            </div>
+            <p class="text-xs text-text-muted mt-2">Analysis runs locally — passwords never leave this server.</p>
+          </div>
+
+          <!-- Score ring -->
+          <div id="score-container" class="bg-bg-secondary border border-border-default rounded-lg p-6 mt-4 hidden">
+            <div class="flex flex-col items-center">
+              <svg width="160" height="160" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="70" fill="none" stroke="#21262d" stroke-width="10" />
+                <circle id="score-ring" cx="80" cy="80" r="70" fill="none" stroke="#3fb950" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="440"
+                  transform="rotate(-90 80 80)" class="score-ring" />
+                <text id="score-value" x="80" y="72" text-anchor="middle" fill="#e6edf3" font-size="36" font-weight="700" font-family="JetBrains Mono">0</text>
+                <text id="score-label" x="80" y="100" text-anchor="middle" fill="#8b949e" font-size="13" font-family="Inter">—</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Analysis stats -->
+          <div id="stats-container" class="bg-bg-secondary border border-border-default rounded-lg p-4 mt-4 hidden">
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="flex justify-between"><span class="text-text-secondary">Entropy</span><span id="stat-entropy" class="mono text-text-primary">—</span></div>
+              <div class="flex justify-between"><span class="text-text-secondary">Length</span><span id="stat-length" class="mono text-text-primary">—</span></div>
+              <div class="flex justify-between"><span class="text-text-secondary">Unique</span><span id="stat-unique" class="mono text-text-primary">—</span></div>
+              <div class="flex justify-between"><span class="text-text-secondary">Classes</span><span id="stat-classes" class="mono text-text-primary">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results column -->
+        <div class="lg:col-span-2">
+          <div id="pw-placeholder" class="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center">
+            <svg class="w-16 h-16 text-text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <p class="text-text-secondary text-lg">Type a password to begin analysis</p>
+            <p class="text-text-muted text-sm mt-2">See entropy, pattern detection, breach checking, and scoring breakdown</p>
+          </div>
+
+          <div id="pw-results" class="space-y-4 hidden">
+            <!-- Breakdown -->
+            <div class="bg-bg-secondary border border-border-default rounded-lg p-5">
+              <h3 class="text-sm font-semibold mb-3 text-text-secondary uppercase tracking-wider">Score Breakdown</h3>
+              <div id="breakdown-bars" class="space-y-3"></div>
+            </div>
+
+            <!-- Patterns -->
+            <div id="patterns-section" class="bg-bg-secondary border border-border-default rounded-lg p-5 hidden">
+              <h3 class="text-sm font-semibold mb-3 text-text-secondary uppercase tracking-wider">Patterns Detected</h3>
+              <div id="patterns-list" class="space-y-2"></div>
+            </div>
+
+            <!-- Breach -->
+            <div id="breach-section" class="hidden">
+              <div class="bg-accent-red/10 border border-accent-red/30 rounded-lg p-4 flex items-start gap-3">
+                <svg class="w-5 h-5 text-accent-red flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                <div>
+                  <p class="font-semibold text-accent-red">Breached Password</p>
+                  <p id="breach-msg" class="text-sm text-text-secondary mt-1"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="bg-bg-secondary border border-border-default rounded-lg p-5">
+              <h3 class="text-sm font-semibold mb-3 text-text-secondary uppercase tracking-wider">Suggestions</h3>
+              <ul id="suggestions-list" class="space-y-2"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NETWORK TAB -->
+    <section id="panel-network" class="hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-semibold">Network Audit</h2>
+          <p class="text-text-secondary text-sm mt-1">ARP discovery + port scanning for networks you own</p>
+        </div>
+        <span class="bg-accent-yellow/10 text-accent-yellow text-xs font-medium px-3 py-1 rounded-full">Demo Mode</span>
+      </div>
+      <div id="network-content" class="space-y-4">
+        <div class="flex items-center justify-center py-12">
+          <div class="text-text-muted pulse">Loading network data...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HANDSHAKE TAB -->
+    <section id="panel-handshake" class="hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-semibold">WPA Handshake Analyzer</h2>
+          <p class="text-text-secondary text-sm mt-1">Educational 4-way handshake protocol walkthrough</p>
+        </div>
+        <span class="bg-accent-purple/10 text-accent-purple text-xs font-medium px-3 py-1 rounded-full">Educational</span>
+      </div>
+      <div id="handshake-content" class="space-y-4">
+        <div class="flex items-center justify-center py-12">
+          <div class="text-text-muted pulse">Loading handshake data...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-border-default mt-16 py-6">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between text-xs text-text-muted">
+      <span>SecAudit — Security auditing for educational purposes only</span>
+      <span class="mono">Built with FastAPI + Python</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
