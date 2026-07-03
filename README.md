@@ -31,6 +31,15 @@ Read `.pcap` captures, detect WPA 4-way handshake frames, display metadata (BSSI
 python main.py handshake capture.pcap
 ```
 
+### Web Dashboard
+All three modules are also available as a FastAPI-backed web app with a dark, dashboard-style UI — password analysis is fully live, while network scanning and handshake analysis run in a demo mode (since both need local system/packet access unavailable to a hosted server).
+
+```bash
+uvicorn web.app:app --reload
+```
+
+Then open `http://localhost:8000`. A `render.yaml` is included for one-click deployment to [Render](https://render.com).
+
 ## Quick Start
 
 ```bash
@@ -45,6 +54,7 @@ python main.py
 - **matplotlib** — strength charts and flow diagrams
 - **scapy** — packet capture reading, ARP discovery
 - **python-nmap** — port scanning (optional, falls back to socket scan)
+- **fastapi** / **uvicorn** — web dashboard backend
 
 ## Architecture
 
@@ -66,6 +76,10 @@ toolkit/
     ├── pcap_reader.py     # Read .pcap files, extract metadata
     ├── detector.py        # 4-way handshake frame identification
     └── protocol.py        # Educational protocol explainer
+
+web/
+├── app.py                 # FastAPI backend exposing the toolkit over HTTP
+└── static/                # Dashboard frontend (HTML/JS)
 ```
 
 ## Scoring System (Password)
